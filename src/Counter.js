@@ -1,20 +1,32 @@
-import React, {useState} from 'react'
+import React, {useReducer} from 'react'
+
+// 우선 reducer을 만들어준다. 이런식으로 action.type을 기준으로 switch를 만든다
+function reducer(state, action) {
+  switch(action.type) {
+    case 'INCREMENT':
+      return state + 1
+    case 'DECREMENT':
+      return state - 1
+    default:
+      throw new Error('Unhandled action')
+      // case로 설정한것외에 type을 넣으면 호출하는것이 default
+  }
+}
 
 function Counter() {
-  const [number, setNumber] = useState(0)
-  // 배열 분해 할당으로 첫번째것 number에 두번째것 setNumber에 받아옴 number의 초기값은 ()안에 값임
-  
+  const [number, dispatch] = useReducer(reducer, 0)
+  // useReducer(함수이름, 초기값) dispatch가 type을 넣는 함수가된다
   const onIncrease = () => {
-    // setNumber(number+1)
-    setNumber(n => n + 1)
-    // 화살표 함수를 넣는 방법은 기존의값(현재의값)을 가져와서 업데이트 하는 방법을 정하는것이고
-    // 최적화할때 props를 바꾸지않으면서 할때 필요하다.
+    dispatch({
+      type: 'INCREMENT'
+    })
   }
   const onDecrease = () => {
-    setNumber(number - 1)
-    // 이것은 업데이트 될값을 넣었다고 할 수 있다.
-    // setNumber(n => n -1)
+    dispatch({
+      type: 'DECREMENT'
+    })
   }
+  // 이런식으로 사용해주면된다.
   return (
     <div>
       <h1>{number}</h1>

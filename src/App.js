@@ -1,29 +1,15 @@
-import React, {useRef, useState, useMemo} from 'react'
+import React, {useReducer, useMemo, createContext} from 'react'
 import CreateUser from './CreateUser';
 import UserList from './UserList';
+import produce from 'immer'
+
 
 function countActiveUsers(users) {
-  console.log('활성 사용자 수를 세는중...')
   return users.filter(user => user.active).length
 }
-// useMemo 효과 체험을 위한 함수를 만들어줌 active가 트루인 개수를 반환해주는 함수
 
-function App() {
-  const [inputs, setInputs] = useState({
-    username: '',
-    email: '',
-  })
-  const {username, email} = inputs
-
-  const onChange = e => {
-    const {name, value} = e.target
-    setInputs({
-      ...inputs,
-      [name]: value
-    })
-  }
-
-  const [users,setUsers] = useState([
+const initialState = {
+  users: [
     {
       id: 1,
       username: 'Amy',
@@ -42,52 +28,50 @@ function App() {
       email: 'coo@naver.com',
       active: false,
     },
-  ])
+  ],
+}
 
-  const nextId = useRef(4)
+function reducer(state, action) {
+  switch(action.type) {
 
-  const onCreate = () => {
-    const user = {
-      id: nextId.current,
-      ...inputs
-    }
-    setUsers([...users, user])
-    // setUsers(users.concat(user))
-    setInputs({
-      username: '',
-      email: '',
-    })
-    nextId.current += 1
+    case 'CREATE_USER':
+      return {
+        users: state.users.concat(action.user)
+      }
+    case 'TOGGLE_USER':
+      return {
+        ...state,
+        users: state.users.map(user => user.id === action.id 
+          ? {...user, active: !user.active}
+          : user
+        )
+      }
+    case 'REMOVE_USER':
+      return {
+        ...state,
+        users: state.users.filter(user => user.id !== action.id)
+      }
+    default:
+      throw new Error('Unhandled action')
   }
+}
 
-  const onRemove = id => {
-    setUsers(users.filter(user => user.id !== id))
-  }
+export const UserDispatch = createContext(null)
 
-  const onToggle = id => {
-    setUsers(users.map(user => user.id === id ? {...user, active: !user.active} : user))
-  }
+function App() {
+
+  const [state, dispatch] = useReducer(reducer, initialState)
+
+  const {users} = state
 
   const count = useMemo(() => countActiveUsers(users), [users])
-  // 첫번째 인자로는 함수를 넣어야함, 그다음 인자는 deps임
-  // 그러므로 users안의 값이 바뀔때만 함수가 호출됨
-  // useMemo를 안하면 users의 값이 바뀌지 않을때도 호출됨.
 
   return (
-    <>
-      <CreateUser 
-        username={username}
-        email={email}
-        onChange={onChange}
-        onCreate={onCreate}
-      />
-      <UserList 
-        users={users} 
-        onRemove={onRemove} 
-        onToggle={onToggle} 
-        />
+    <UserDispatch.Provider value={dispatch}>
+      <CreateUser />
+      <UserList users={users} />
       <div>활성 사용자수 : {count}</div>
-    </>
+    </UserDispatch.Provider>
   );
 }
 

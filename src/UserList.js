@@ -1,7 +1,9 @@
-import React from 'react'
+import React, {useContext} from 'react'
+import {UserDispatch} from './App'
 
-function User({user, onRemove, onToggle}) {
+const User = React.memo(function User({user}) {
   const {username, email, id, active} = user 
+  const dispatch = useContext(UserDispatch)
   return (
     <div>
       <b 
@@ -9,14 +11,20 @@ function User({user, onRemove, onToggle}) {
           color: active ? '#81C147' : 'black',  
           cursor: 'pointer'
         }} 
-        onClick={() => onToggle(id)}
+        onClick={() => dispatch({
+          type: 'TOGGLE_USER',
+          id
+        })}
       >{username}</b> <span>({email})</span>
-      <button onClick={() => onRemove(id)}>삭제</button>
+      <button onClick={() => dispatch({
+        type: 'REMOVE_USER',
+        id
+      })}>삭제</button>
     </div>
   )
-}
+})
 
-function UserList({users, onRemove, onToggle}) {
+function UserList({users}) {
   
   return (
     <>
@@ -26,8 +34,6 @@ function UserList({users, onRemove, onToggle}) {
             <User 
               user={user} 
               key={user.id} 
-              onRemove={onRemove}
-              onToggle={onToggle}
               />
           )
         )
@@ -36,4 +42,5 @@ function UserList({users, onRemove, onToggle}) {
   )
 }
 
-export default UserList
+export default React.memo(UserList,
+  (prevProps, nextProps) => nextProps.users === prevProps.users)
